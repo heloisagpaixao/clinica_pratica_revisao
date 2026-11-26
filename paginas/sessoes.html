@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clínica - Sessões</title>
+  </head>
+  <body>
+    <h1>Sessões</h1>
+    <p><a href="/principal"> Voltar </a></p>
+
+    <table border="1">
+      <tr>
+        <th>Data da Sessão</th>
+        <th>Exercícios</th>
+        <th>Diagnóstico</th>
+        <th>Paciente</th>
+        <th>Alterar Data</th>
+      </tr>
+      {{#sessoes}}
+      <tr>
+        <td>{{data_br}}</td>
+        <td>{{exercicios}}</td>
+        <td>{{diagnostico}}</td>
+        <td>{{paciente_nome}}</td>
+        <td>
+          <form method="POST" action="/sessoes/{{id}}">
+            <input type="hidden" name="_method" value="PUT" />
+
+            <input
+              type="datetime-local"
+              name="data_sessao"
+              value="{{data_input}}"
+              required
+            />
+
+            <button>Salvar</button>
+          </form>
+
+          <form method="POST" action="/sessoes/{{id}}">
+            <input type="hidden" name="_method" value="DELETE" />
+
+            <button>Excluir</button>
+          </form>
+        </td>
+      </tr>
+      {{/sessoes}}
+    </table>
+
+    <h2>Cadastrar sessão</h2>
+    <form method="POST" action="/sessoes">
+      <select name="plano_id" required>
+        <option value="">Selecione o plano...</option>
+        {{#planos}}
+        <option value="{{id}}">
+          {{diagnostico}}: {{exercicios}} = {{resultado_esperado}}
+        </option>
+        {{/planos}}
+      </select>
+
+      <input type="datetime-local" name="data_sessao" required />
+      <input
+        type="text"
+        name="exercicios"
+        placeholder="Exercícios que serão realizados"
+      />
+
+      <button>Cadastrar</button>
+    </form>
+    <p>{{erro}}</p>
+  </body>
+</html>

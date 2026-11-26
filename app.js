@@ -77,7 +77,7 @@ async function excluir(res, tabela, id, volta, motivo) {
 async function mostrarPlanos(req, res, erro = "") {
   const [planos] = await db.query("SELECT * FROM plano_de_tratamento");
   const [listaPacientes] = await db.query("SELECT id, nome FROM pacientes");
-  const editar = projetos.find((p) => String(p.id) === req.query.editar);
+  const editar = planos.find((p) => String(p.id) === req.query.editar);
 
   const pacientes = listaPacientes.map((paciente) => ({
     ...paciente,
@@ -186,8 +186,114 @@ app.delete("/pacientes/:id", async (req, res) => {
     "pacientes",
     req.params.id,
     "/pacientes",
-    "O paciente já possuí projetos cadastrados.",
+    "O paciente já possuí planos cadastrados.",
   );
+});
+
+// =================================== PLANOS DE TRATAMENTO =================================== //
+app.get("/planos", (req, res) => mostrarPlanos(req, res));
+
+app.post("/planos", async (req, res) => {
+  const {
+    paciente_id,
+    diagnostico,
+    exercicios,
+    resultado_esperado,
+    avaliacao,
+  } = req.body;
+  if (!paciente_id) {
+    return mostrar(req, res, "Paciente ID é obrigatório.");
+  }
+  await db.query(
+    "INSERT INTO plano_de_tratamento (paciente_id, diagnostico, exercicios, resultado_esperado, avaliacao) VALUES (?, ?, ?, ?, ?)",
+    [
+      paciente_id,
+      diagnostico,
+      exercicios,
+      resultado_esperado,
+      avaliacao || null,
+    ],
+  );
+  res.redirect("/planos");
+});
+
+app.put("/planos/:id", async (req, res) => {
+  const {
+    paciente_id,
+    diagnostico,
+    exercicios,
+    resultado_esperado,
+    avaliacao,
+  } = req.body;
+
+  if (!paciente_id)
+    return mostrarPlanos(req, res, "ID do paciente é obrigatório.");
+
+  await db.query(
+    "UPDATE plano_de_tratamento SET paciente_id = ?, diagnostico = ?, exercicios = ?, resultado_esperado = ?, avaliacao = ? WHERE id = ?",
+    [
+      paciente_id,
+      diagnostico,
+      exercicios,
+      resultado_esperado,
+      avaliacao || null,
+      req.params.id,
+    ],
+  );
+  res.redirect("/planos");
+});
+
+app.delete("/planos/:id", async (req, res) => {
+  await excluir(
+    res,
+    "plano_de_tratamento",
+    req.params.id,
+    "/planos",
+    "O plano possui sessões.",
+  );
+});
+
+// =================================== SESSÕES =================================== //
+app.get("/sessoes", async (req, res) => {
+  const [lista] = await db.query(
+    `SELECT sessoes.*, plano_de_tratamento.diagnostico, pacientes.nome AS paciente_nome
+     FROM sessoes
+     JOIN plano_de_tratamento ON plano_de_tratamento.id = sessoes.plano_id
+     JOIN pacientes ON pacientes.id = plano_de_tratamento.paciente_id
+     ORDER BY sessoes.data_sessao`,
+  );
+
+  const [planos] = await db.query("SELECT * FROM plano_de_tratamento");
+
+  const sessoes = lista.map((s) => ({
+    ...s,
+    data_br: new Date(s.data_sessao).toLocaleString("pt-BR"),
+    data_input: s.data_sessao.slice(0, 16).replace(" ", "T"),
+  }));
+
+  res.send(mostrar("sessoes", { sessoes, planos }));
+});
+
+app.post("/sessoes", async (req, res) => {
+  const { plano_id, data_sessao, exercicios } = req.body;
+
+  await db.query(
+    "INSERT INTO sessoes (plano_id, data_sessao, exercicios) VALUES (?, ?, ?)",
+    [plano_id, data_sessao.replace("T", " "), exercicios],
+  );
+  res.redirect("/sessoes");
+});
+
+app.put("/sessoes/:id", async (req, res) => {
+  await db.query("UPDATE sessoes SET data_sessao = ? WHERE id = ?", [
+    req.body.data_sessao.replace("T", " "),
+    req.params.id,
+  ]);
+  res.redirect("/sessoes");
+});
+
+app.delete("/sessoes/:id", async (req, res) => {
+  await excluir(res, "sessoes", req.params.id, "/sessoes", " ");
 });
 
 // =================================== BANCO DE DADOS =================================== //

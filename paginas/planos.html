@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clínica - Planos de Tratamento</title>
+  </head>
+  <body>
+    <h1>Planos de Tratamento</h1>
+    <p><a href="/principal"> Voltar </a></p>
+    <table border="1">
+      <tr>
+        <th>Diagnóstico</th>
+        <th>Exercícios</th>
+        <th>Resultado Esperado</th>
+        <th>Avaliação</th>
+        <th>Paciente</th>
+        <th></th>
+      </tr>
+      {{#planos}}
+      <tr>
+        <td>{{diagnostico}}</td>
+        <td>{{exercicios}}</td>
+        <td>{{resultado_esperado}}</td>
+        <td>{{avaliacao}}</td>
+        <td>{{paciente_id}}</td>
+        <td>
+          <a href="/planos?editar={{id}}">Editar</a>
+
+          <form method="POST" action="/planos/{{id}}">
+            <input type="hidden" name="_method" value="DELETE" />
+            <button>Excluir</button>
+          </form>
+        </td>
+      </tr>
+      {{/planos}}
+    </table>
+
+    <h2>
+      {{#editando}} Editar {{/editando}}{{^editando}} Cadastrar {{/editando}}
+      plano
+    </h2>
+
+    <form method="POST" action="{{acao}}">
+      {{#editando}}<input type="hidden" name="_method" value="PUT" />
+      {{/editando}}
+      <select name="paciente_id" required>
+        <option value="">Selecione o paciente...</option>
+        {{#pacientes}}
+        <option value="{{id}}" {{selecionado}}>{{nome}}</option>
+        {{/pacientes}}
+      </select>
+
+      <input
+        type="text"
+        name="diagnostico"
+        placeholder="Diagnóstico"
+        value="{{form.diagnostico}}"
+        required
+      />
+      <input
+        type="text"
+        name="exercicios"
+        placeholder="Exercícios"
+        value="{{form.exercicios}}"
+      />
+      <input
+        type="text"
+        name="resultado_esperado"
+        placeholder="Resultado Esperado"
+        value="{{form.resultado_esperado}}"
+      />
+      <input
+        type="text"
+        name="avaliacao"
+        placeholder="Avaliação"
+        value="{{form.avaliacao}}"
+      />
+      <button>
+        {{#editando}} Salvar {{/editando}} {{^editando}} Cadastrar {{/editando}}
+      </button>
+    </form>
+    <p>{{erro}}</p>
+  </body>
+</html>
